@@ -3,6 +3,14 @@
 (define (pick-random lst)
   (list-ref lst (random (length lst))))
 
+(define (triggers)
+  '(((depressed suicide)
+    ((when you feel depressed, go out for ice cream)
+     (depression is a disease that can be treated)))
+   ((mother father parents)
+    ((tell me more about your family)
+     (why do you feel that way about your parents?)))))
+
 (define (change-person phrase)
   (many-replace '((U you)
                   (R are)
@@ -53,6 +61,22 @@
      (can you say why)
      (it is okay that))))
 
+(define (answer-trigger trigger answers lst)
+  (cond ((null? lst) '())
+        (else
+         (cond ((member (car lst) trigger)
+                (pick-random answers))
+               (else (answer-trigger trigger answers (cdr lst)))))))
+  
+(define (answer-triggers trigger-pairs lst)
+  (cond ((null? trigger-pairs) (hedge))
+        (else
+         (let ((pair (car trigger-pairs)))
+           (let ((answer (answer-trigger (car pair) (cadr pair) lst)))
+             (cond ((null? answer)
+                    ((answer-triggers (cdr trigger-pairs) lst)))
+                   (else answer)))))))
+  
 (define (hedge)
   (pick-random
    '((please go on)
@@ -84,9 +108,11 @@
                   (doctor-driver-loop name (append (list user-response) phrases)))))))
 
 (define (reply user-response phrases)
-  (cond ((prob 1 3)
-         (append (qualifier)
-                 (change-person user-response)))
+  (cond ((prob 1 2)
+         (cond ((prob 1 2) (answer-triggers (triggers) user-response))
+               (else
+                (append (qualifier)
+                        (change-person user-response)))))
         (else (cond ((or (prob 1 2) (null? phrases))
                      (hedge))
                     (else
@@ -100,8 +126,8 @@
 
 (define (visit-doctor)
   (let ((name (ask-patient-name)))
-    (cond ((equal? (list name) '(kornevgen))
-          (print '(gtfo from my office)))
+    (cond ((equal?  name 'kornevgen)
+           (print '(gtfo from my office you sick pice of shit)))
           (else (session name)
                 (visit-doctor)))))
 
