@@ -19,6 +19,12 @@
                   (my UR))
                 phrase))
 
+(define (ask-patient-name)
+  (print '(next!))
+  (newline)
+  (print '(who are you?))
+  (car (read)))
+
 (define (many-replace replacement-pairs lst)
   (cond ((null? replacement-pairs) lst)
         (else (let ((pat-rep (car replacement-pairs)))
@@ -71,7 +77,8 @@
       ((user-response (read)))
     (cond ((equal? user-response '(goodbye))
            (print (list 'goodbye name))
-           (print '(see you nextweek)))
+           (print '(see you nextweek))
+           (newline))
           (else (let ((response (reply user-response phrases)))
                   (print response)
                   (doctor-driver-loop name (append (list user-response) phrases)))))))
@@ -83,12 +90,19 @@
         (else (cond ((or (prob 1 2) (null? phrases))
                      (hedge))
                     (else
-                          (append '(earlier you said that)
-                                  (change-person (pick-random phrases))))))))
+                     (append '(earlier you said that)
+                             (change-person (pick-random phrases))))))))
 
-(define (visit-doctor name)
+(define (session name)
   (print (list 'hello name))
   (print '(what seems to be the trouble?))
   (doctor-driver-loop name '()))
 
-(visit-doctor '(Slava))
+(define (visit-doctor)
+  (let ((name (ask-patient-name)))
+    (cond ((equal? (list name) '(kornevgen))
+          (print '(gtfo from my office)))
+          (else (session name)
+                (visit-doctor)))))
+
+(visit-doctor)
