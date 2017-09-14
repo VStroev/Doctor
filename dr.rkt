@@ -6,6 +6,7 @@
 (define (triggers)
   '(((depressed suicide)
     ((when you feel depressed, go out for ice cream)
+     (when you feel depressed, you shuld eat some tasty food like wokker)
      (depression is a disease that can be treated)))
    ((mother father parents)
     ((tell me more about your *)
@@ -77,7 +78,6 @@
   (cond ((null? trigger-pairs) '())
         (else
          (let ((triggers (get-triggers (caar trigger-pairs) lst)))
-           ;(print triggers)
            (cond ((null? triggers)
                   (find-pairs (cdr trigger-pairs) lst))
                  (else
@@ -85,13 +85,10 @@
 
 (define (answer-t trigger-pairs lst phrases)
   (let ((new-pairs  (find-pairs trigger-pairs lst)))
-    ;(print new-pairs)
-    ;(newline)
     (cond ((null? new-pairs)
            (reply lst phrases))
           (else
            (let ((pair (pick-random new-pairs)))
-             ;(print pair)
              (replace '* (pick-random (car pair)) (pick-random (cadr pair))))))))
   
 (define (hedge)
@@ -143,7 +140,7 @@
 
 (define (visit-doctor)
   (let ((name (ask-patient-name)))
-    (cond ((equal?  name 'kornevgen)
+    (cond ((equal?  name 'krnvgn)
            (print '(gtfo from my office)))
           (else (session name)
                 (visit-doctor)))))
