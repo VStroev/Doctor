@@ -9,7 +9,10 @@
      (depression is a disease that can be treated)))
    ((mother father parents)
     ((tell me more about your *)
-     (why do you feel that way about your *)))))
+     (why do you feel that way about your *)))
+   ((parents friends)
+    ((what do you feel about your *)
+     (what can you say about *)))))
 
 (define (change-person phrase)
   (many-replace '((U you)
@@ -61,21 +64,35 @@
      (can you say why)
      (it is okay that))))
 
-(define (answer-trigger trigger answers lst)
-  (cond ((null? lst) '())
+(define (get-triggers triggers lst)
+  (cond ((null? triggers) '())
         (else
-         (cond ((member (car lst) trigger)
-                (replace '* (car lst) (pick-random answers)))
-               (else (answer-trigger trigger answers (cdr lst)))))))
-  
-(define (answer-triggers trigger-pairs lst)
-  (cond ((null? trigger-pairs) (hedge))
+         (let ((trigger (car triggers)))
+               (cond ((member trigger lst)
+                      (append (list trigger) (get-triggers (cdr triggers) lst)))
+                     (else
+                      (get-triggers (cdr triggers) lst)))))))
+
+(define (find-pairs trigger-pairs lst)
+  (cond ((null? trigger-pairs) '())
         (else
-         (let ((pair (car trigger-pairs)))
-           (let ((answer (answer-trigger (car pair) (cadr pair) lst)))
-             (cond ((null? answer)
-                    (answer-triggers (cdr trigger-pairs) lst))
-                   (else answer)))))))
+         (let ((triggers (get-triggers (caar trigger-pairs) lst)))
+           ;(print triggers)
+           (cond ((null? triggers)
+                  (find-pairs (cdr trigger-pairs) lst))
+                 (else
+                  (append (list (list triggers (cadar trigger-pairs))) (find-pairs (cdr trigger-pairs) lst))))))))
+
+(define (answer-t trigger-pairs lst phrases)
+  (let ((new-pairs  (find-pairs trigger-pairs lst)))
+    ;(print new-pairs)
+    ;(newline)
+    (cond ((null? new-pairs)
+           (reply lst phrases))
+          (else
+           (let ((pair (pick-random new-pairs)))
+             ;(print pair)
+             (replace '* (pick-random (car pair)) (pick-random (cadr pair))))))))
   
 (define (hedge)
   (pick-random
@@ -109,7 +126,7 @@
 
 (define (reply user-response phrases)
   (cond ((prob 1 2)
-         (cond ((prob 1 2) (answer-triggers (triggers) user-response))
+         (cond ((prob 1 2) (answer-t (triggers) user-response phrases))
                (else
                 (append (qualifier)
                         (change-person user-response)))))
