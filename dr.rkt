@@ -8,8 +8,8 @@
     ((when you feel depressed, go out for ice cream)
      (depression is a disease that can be treated)))
    ((mother father parents)
-    ((tell me more about your family)
-     (why do you feel that way about your parents?)))))
+    ((tell me more about your *)
+     (why do you feel that way about your *)))))
 
 (define (change-person phrase)
   (many-replace '((U you)
@@ -65,7 +65,7 @@
   (cond ((null? lst) '())
         (else
          (cond ((member (car lst) trigger)
-                (pick-random answers))
+                (replace '* (car lst) (pick-random answers)))
                (else (answer-trigger trigger answers (cdr lst)))))))
   
 (define (answer-triggers trigger-pairs lst)
@@ -74,7 +74,7 @@
          (let ((pair (car trigger-pairs)))
            (let ((answer (answer-trigger (car pair) (cadr pair) lst)))
              (cond ((null? answer)
-                    ((answer-triggers (cdr trigger-pairs) lst)))
+                    (answer-triggers (cdr trigger-pairs) lst))
                    (else answer)))))))
   
 (define (hedge)
@@ -96,7 +96,7 @@
 
 (define (doctor-driver-loop name phrases)
   (newline)
-  ;  (princ '**)
+  (print '**)
   (let
       ((user-response (read)))
     (cond ((equal? user-response '(goodbye))
@@ -127,7 +127,7 @@
 (define (visit-doctor)
   (let ((name (ask-patient-name)))
     (cond ((equal?  name 'kornevgen)
-           (print '(gtfo from my office you sick pice of shit)))
+           (print '(gtfo from my office)))
           (else (session name)
                 (visit-doctor)))))
 
