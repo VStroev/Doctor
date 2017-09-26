@@ -16,19 +16,12 @@
      (what can you say about *)))))
 
 (define (change-person phrase)
-  (many-replace '((U you)
-                  (R are)
-                  (UR your)
-                  (are am)
+  (replace '((are am)
                   (r am)
                   (you i)
                   (u i)
                   (your my)
-                  (ur my)
-                  (i U)
-                  (me U)
-                  (am R)
-                  (my UR))
+                  (ur my))
                 phrase))
 
 (define (ask-patient-name)
@@ -37,24 +30,15 @@
   (print '(who are you?))
   (car (read)))
 
-(define (many-replace replacement-pairs lst)
-  (cond ((null? replacement-pairs) lst)
-        (else (let ((pat-rep (car replacement-pairs)))
-                (replace (car pat-rep)
-                         (cadr pat-rep)
-                         (many-replace (cdr replacement-pairs)
-                                       lst))))))
-
-(define (replace pattern replacement lst)
-  (cond
-    ((null? lst) '())
-    ((equal? (car lst) pattern)
-     (cons replacement 
-           (replace pattern replacement (cdr lst))))
-    (else
-     (cons (car lst)
-           (replace pattern replacement (cdr lst))))))
-
+(define (replace pairs lst)
+    (define (findrep pairs word)
+      (cond ((null? pairs) word)
+            ((equal? (caar pairs) word) (cadar pairs))
+            ((equal? (cadar pairs) word) (caar pairs))
+            (else (findrep (cdr pairs) word))))
+    (if (null? lst) '()
+        (cons (findrep pairs (car lst))
+              (replace pairs (cdr lst)))))
 (define (qualifier)
   (pick-random 
    '((you seem to think)
