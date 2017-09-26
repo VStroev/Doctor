@@ -6,7 +6,6 @@
 (define (triggers)
   '(((depressed suicide)
     ((when you feel depressed, go out for ice cream)
-     (when you feel depressed, you shuld eat some tasty food like wokker)
      (depression is a disease that can be treated)))
    ((mother father parents)
     ((tell me more about your *)
@@ -15,20 +14,37 @@
     ((what do you feel about your *)
      (what can you say about *)))))
 
+(define (handlers)
+  (list (list (lambda(x) #t) hedge 100.0)
+        (list (lambda(x) (not (null? (cadr x)))) remind-phrase  150.0)
+        (list (lambda(x) (> (length (car x)) 3)) repeat  200.0)
+        (list (lambda(x) (> (length (car x)) 0)) answer-t  300.0)))
+
+
 (define (change-person phrase)
   (replace '((are am)
-                  (r am)
-                  (you i)
-                  (u i)
-                  (your my)
-                  (ur my))
-                phrase))
+             (r am)
+             (you i)
+             (u i)
+             (your my)
+             (ur my))
+           phrase))
 
 (define (ask-patient-name)
   (print '(next!))
   (newline)
   (print '(who are you?))
   (car (read)))
+
+(define (replace-old pattern replacement lst)
+  (cond
+    ((null? lst) '())
+    ((equal? (car lst) pattern)
+     (cons replacement 
+           (replace-old pattern replacement (cdr lst))))
+    (else
+     (cons (car lst)
+          (replace-old pattern replacement (cdr lst))))))
 
 (define (replace pairs lst)
     (define (findrep pairs word)
@@ -67,15 +83,16 @@
                  (else
                   (append (list (list triggers (cadar trigger-pairs))) (find-pairs (cdr trigger-pairs) lst))))))))
 
-(define (answer-t trigger-pairs lst phrases)
-  (let ((new-pairs  (find-pairs trigger-pairs lst)))
-    (cond ((null? new-pairs)
-           (reply lst phrases))
-          (else
-           (let ((pair (pick-random new-pairs)))
-             (replace '* (pick-random (car pair)) (pick-random (cadr pair))))))))
+(define (answer-t responce)
+  (let ((trigger-pairs (triggers)))
+    (let ((new-pairs  (find-pairs trigger-pairs (car responce))))
+          (cond ((null? new-pairs)
+                 (hedge responce))
+                (else
+                 (let ((pair (pick-random new-pairs)))
+                   (replace-old '* (pick-random (car pair))  (pick-random (cadr pair)))))))))
   
-(define (hedge)
+(define (hedge responce)
   (pick-random
    '((please go on)
      (many people have the same sorts of feelings)
@@ -86,11 +103,19 @@
      (oh srsly)
      (wtf))))
 
+(define (repeat user-response)
+  (append (qualifier)
+          (change-person (car user-response))))
+
 (define (fifty-fifty)
   (= (random 2) 0))
 
 (define (prob n1 n2)
   (< (random n2) n1))
+
+(define (remind-phrase phrases)
+  (append '(earlier you said that)
+                             (change-person (pick-random (cadr phrases)))))
 
 (define (doctor-driver-loop name phrases)
   (newline)
@@ -101,22 +126,22 @@
            (print (list 'goodbye name))
            (print '(see you nextweek))
            (newline))
-          (else (let ((response (reply user-response phrases)))
+          (else (let ((response (reply (handlers) user-response phrases)))
                   (print response)
                   (doctor-driver-loop name (append (list user-response) phrases)))))))
 
-(define (reply user-response phrases)
-  (cond ((prob 1 2)
-         (cond ((prob 1 2) (answer-t (triggers) user-response phrases))
-               (else
-                (append (qualifier)
-                        (change-person user-response)))))
-        (else (cond ((or (prob 1 2) (null? phrases))
-                     (hedge))
-                    (else
-                     (append '(earlier you said that)
-                             (change-person (pick-random phrases))))))))
+(define (reply triplets user-response phrases)
+  (let ((handlers (filter (lambda(triplet) ((car triplet) (list user-response phrases))) triplets)))
+    ((weight-random handlers) (list user-response phrases))))
 
+(define (weight-random handlers)
+  (cond ((null? handlers) '())
+        (else
+         (print handlers)
+         (let ((max-weight (apply max (map caddr handlers))))
+           (let ((best-handlers (filter (lambda(x) (equal? (caddr x) max-weight)) handlers)))
+             (cadr (pick-random best-handlers)))))))
+      
 (define (session name)
   (print (list 'hello name))
   (print '(what seems to be the trouble?))
